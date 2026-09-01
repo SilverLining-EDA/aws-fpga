@@ -1,0 +1,142 @@
+// Build and boot/run flow for the cl_cva6 example.
+// Step numbers match the "Complete command flow" section of README.md.
+//
+// Shared theme with cl_cva6_block_diagram.dot:
+//   host   #1565c0 / #e3f2fd      shell  #6a1b9a / #f3e5f5
+//   CL     #2e7d32 / #e8f5e9      SoC    #ef6c00 / #fff8e1
+//   muted  #546e7a / #eceff1
+//
+// Regenerate with:
+//   dot -Tpng -Gdpi=140 cl_cva6_boot_flow.dot -o cl_cva6_boot_flow.png
+digraph cl_cva6_boot_flow {
+  rankdir=TB;
+  compound=true;
+  splines=spline;
+  nodesep=0.55;
+  ranksep=0.65;
+  pad=0.35;
+  bgcolor="white";
+  fontname="Helvetica";
+
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11,
+        penwidth=1.4, margin="0.22,0.14", color="#90a4ae", fillcolor="#ffffff"];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#546e7a",
+        color="#78909c", penwidth=1.3, arrowsize=0.8];
+
+  // ----------------------------------------------------- build (one time) ---
+  subgraph cluster_build {
+    label=<<B>Build</B> &nbsp;<FONT POINT-SIZE="10">one time</FONT>>;
+    fontname="Helvetica";
+    fontsize=13;
+    fontcolor="#546e7a";
+    labelloc=t;
+    style="rounded,filled";
+    fillcolor="#eceff1";
+    color="#546e7a";
+    penwidth=1.6;
+    margin=20;
+
+    b0 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>0 &nbsp;CVA6 submodules</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">git submodule update</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>1 &nbsp;Synthesis &#8594; DCP</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">aws_build_dcp_from_cl.py</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#78909c">~20&#8211;40 min</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>2 &nbsp;Create AFI</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">create_afi.py</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>3 &nbsp;Load AFI</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">fpga-load-local-image</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>4 &nbsp;Firmware</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">hello_world.bin</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b5 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>5 &nbsp;Host app</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">hello_cva6</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#cfd8dc", color="#546e7a"];
+
+    b0 -> b1 -> b2 -> b3 -> b4 -> b5 [color="#546e7a"];
+  }
+
+  // -------------------------------------------------- run over OCL BAR0 -----
+  subgraph cluster_run {
+    label=<<B>Run</B> &nbsp;<FONT POINT-SIZE="10">hello_cva6 over OCL BAR0</FONT>>;
+    fontname="Helvetica";
+    fontsize=13;
+    fontcolor="#1565c0";
+    labelloc=t;
+    style="rounded,filled";
+    fillcolor="#e3f2fd";
+    color="#1565c0";
+    penwidth=1.6;
+    margin=20;
+
+    r1 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>1 &nbsp;Identify CL</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#546e7a">read <FONT FACE="Courier">MAGIC</FONT> = 0xC6A60001</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#bbdefb", color="#1565c0"];
+
+    r2 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>2 &nbsp;Hold core in reset</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">CTRL.cpu_run = 0</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#bbdefb", color="#1565c0"];
+
+    r3 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>3 &nbsp;Load image to SRAM</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">MEM_ADDR</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">MEM_WDATA</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">MEM_CMD = 1</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#78909c">repeat per 32-bit word</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#bbdefb", color="#1565c0"];
+
+    r4 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>4 &nbsp;Release core</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT FACE="Courier" POINT-SIZE="9" COLOR="#546e7a">CTRL.cpu_run = 1</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#546e7a">fetch from 0x8000_0000</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#bbdefb", color="#1565c0"];
+
+    r5 [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+          <TR><TD ALIGN="LEFT"><B>5 &nbsp;Drain UART FIFO</B></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#546e7a">poll <FONT FACE="Courier">STATUS</FONT>[0]</FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#546e7a">pop <FONT FACE="Courier">UART_RX</FONT></FONT></TD></TR>
+          <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="9" COLOR="#78909c">repeat per byte</FONT></TD></TR>
+        </TABLE>>,
+        fillcolor="#bbdefb", color="#1565c0"];
+
+    out [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2">
+           <TR><TD><B>Hello World!</B></TD></TR>
+           <TR><TD><FONT POINT-SIZE="9" COLOR="#546e7a">on stdout</FONT></TD></TR>
+         </TABLE>>,
+         shape=note, fillcolor="#ffffff", color="#2e7d32"];
+
+    r1 -> r2 -> r3 -> r4 -> r5 [color="#1565c0"];
+    r5 -> out [color="#2e7d32"];
+  }
+
+  // Phase transition, clipped to the cluster borders so it stays a short
+  // horizontal arrow between the two panels.
+  b0 -> r1 [ltail=cluster_build, lhead=cluster_run, constraint=false,
+            color="#546e7a", penwidth=1.6];
+}
