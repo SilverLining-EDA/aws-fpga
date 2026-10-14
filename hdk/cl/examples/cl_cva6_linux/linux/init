@@ -11,4 +11,4 @@ echo "Kernel: $(uname -a)"
 echo "IRFAN BHAI, YOU ARE THE BEST PERSON I HAVE WORKED WITH, THANK YOU!"
 echo
 
-exec /bin/sh
+exec /bin/sh </dev/console >/dev/console 2>&1
